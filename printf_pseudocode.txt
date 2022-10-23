@@ -1,0 +1,85 @@
+
+byte[] MEMORY = {...};
+char[] BUFFER = {};
+void my_printf(add_to_string, first_param, second_param, ...) {
+    int currentIndex = 0;
+    int bufferIndex = 0;
+    int paramsCount = 0;
+    char currentCharacter = '';
+
+    while(currentCharacter != 0) {
+        currentCharacter = MEMORY[add_to_string(, currentIndex, 1)];
+        currentIndex++;
+        if(currentCharacter == '%') {
+            currentCharacter = MEMORY[add_to_string(, currentIndex, 1)];
+            currentIndex++;
+            if(currentCharacter == ('d' | 'u' | 's' | '%')) {
+                paramsCount++;
+            }
+        }
+    }
+
+    int i = paramsCount;
+    while(i > 0) {
+        i--;
+        if(i == 0) push(%rsi);
+        else if(i == 1) push(%rdx);
+        else if(i == 2) push(%rcx);
+        else if(i == 3) push(%r8);
+        else if(i == 4) push(%r9);
+        else {
+            i = i - 2;
+            push(%rbp, i, 8);
+            i = i + 2;
+        }
+    }
+
+    // at this point we have pushed all additional params to the stack in reverse order.
+
+    currentIndex = 0;
+
+    while(currentCharacter != 0) {
+        currentCharacter = MEMORY[add_to_string(, currentIndex, 1)];
+
+        if(currentCharacter == '%') {
+            currentIndex++;
+            currentCharacter = MEMORY[add_to_string(, currentIndex, 1)];
+            
+            switch(currentCharacter) {
+                case 'u':
+                    int num = pop();
+                    int count = 0;
+
+                    do {
+                        num = num / 10;
+                        push((num % 10) + '0'); // push remainder of division + ascii 0
+                        count++;
+                    } while (num != 0);
+
+                    do {
+                        BUFFER[bufferIndex] = pop();
+                        bufferIndex++;
+                        count--;
+                    } while (count > 0);
+                    break;
+                case 'd':
+                    ...
+                    break;
+                case 's':
+                    ...
+                    break;
+                case '%':
+                    ...
+                    break;
+                default:
+                    ...
+            }
+        } else {
+            BUFFER[bufferIndex] = currentCharacter;
+            currentIndex++;
+            bufferIndex++;
+        }
+    }
+
+    syscall_print(1, $BUFFER, currentIndex);
+}
