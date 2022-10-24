@@ -4,7 +4,7 @@ BUFFER: .skip 1024 # Reserve 1024 bytes of memory
 
 .text
 message:
-    .asciz "Hello!\n"
+    .asciz "%u, %u, %u, %u, %u, %u, %u, %u, %u\n"
 
 /*
 byte[] MEMORY = {...};
@@ -103,6 +103,8 @@ my_printf:
 
     movq $0, %r12
     movq $1, %r13
+    movq $0, %r14
+    movq $0, %r15
 
 my_printf_count_params_loop:
     cmpq $0, %r13
@@ -149,6 +151,7 @@ my_printf_push_params_loop:
     cmpq $0, %rax
     jne after_zero
     pushq %rsi
+    jmp my_printf_push_params_loop
 
     after_zero:
         cmpq $1, %rax
@@ -177,10 +180,12 @@ my_printf_push_params_loop:
     after_four:
         subq $3, %rax
         pushq (%rbp, %rax, 8)
+        addq $3, %rax
         jmp my_printf_push_params_loop
 
 my_printf_push_params_loop_end:
     movq $0, %r12
+    movq $1, %r13
 
 my_printf_parse_loop:
     cmpq $0, %r13
@@ -220,7 +225,7 @@ my_printf_parse_loop:
             movq $10, %r10 # load divisor
             div %r10
 
-            addq '0', %rdx
+            addq $48, %rdx # ascii 0
             push %rdx
             incq %rcx
             
@@ -232,6 +237,11 @@ my_printf_parse_loop:
             movq %r13, BUFFER(, %r14, 1)
             incq %r14
 
+            decq %rcx
+            cmpq $0, %rcx
+            jne unsigned_write_loop
+
+        incq %r12
         jmp my_printf_parse_loop
 
     case_d:
@@ -286,7 +296,20 @@ main:
     movq %rsp, %rbp
     
     movq $message, %rdi
+    movq $1, %rsi
+    movq $2, %rdx
+    movq $3, %rcx
+    movq $4, %r8
+    movq $5, %r9
+    pushq $9
+    pushq $8
+    pushq $7
+    pushq $6
     call my_printf
+    popq %rax
+    popq %rax
+    popq %rax
+    popq %rax
 
     # Epilogue
     movq %rbp, %rsp

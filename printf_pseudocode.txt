@@ -37,6 +37,7 @@ void my_printf(add_to_string, first_param, second_param, ...) {
     // at this point we have pushed all additional params to the stack in reverse order.
 
     currentIndex = 0;
+    currentCharacter = '';
 
     while(currentCharacter != 0) {
         currentCharacter = MEMORY[add_to_string(, currentIndex, 1)];
@@ -61,6 +62,8 @@ void my_printf(add_to_string, first_param, second_param, ...) {
                         bufferIndex++;
                         count--;
                     } while (count > 0);
+
+                    currentIndex ++;
                     break;
                 case 'd':
                     ...
